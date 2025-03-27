@@ -1,0 +1,7 @@
+{
+    "respawn_sound": {
+        "sounds": [
+            "respound:respawn_sound"
+        ]
+    }
+}

@@ -1,0 +1,45 @@
+{
+	"schemaVersion": 1,
+	"id": "respound",
+	"version": "${version}",
+	"name": "Respound",
+	"description": "Plays witch sound from re:zero after respawn",
+	"authors": [
+		"Dristeck", 
+		"Kedrusha"
+	],
+	"contact": {
+		"homepage": "@ureshipan",
+		"sources": "pipipi"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/respound/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.pepchiki.Respound"
+		],
+		"client": [
+			"com.pepchiki.RespoundClient"
+		],
+		"fabric-datagen": [
+			"com.pepchiki.RespoundDataGenerator"
+		]
+	},
+	"mixins": [
+		"respound.mixins.json",
+		{
+			"config": "respound.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.16.10",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
