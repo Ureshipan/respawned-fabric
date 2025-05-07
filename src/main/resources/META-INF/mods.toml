@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[40,)"
+license="CC0-1.0"
+
+[[mods]]
+modId="respound"
+version="1.0.3"
+displayName="Re:Spawned"
+authors="Dristeck, Kedrusha"
+description='''
+Adds re:zero return from death sound after respawn (obviously), tp and logging into the world (Client side mod)
+'''
+
+[[dependencies.respound]]
+    modId="forge"
+    mandatory=true
+    versionRange="[40,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.respound]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.18.2,1.21)"
+    ordering="NONE"
+    side="BOTH" 

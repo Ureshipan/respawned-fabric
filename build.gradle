@@ -1,104 +1,109 @@
 plugins {
-	id 'fabric-loom' version '1.10-SNAPSHOT'
+	id 'eclipse'
 	id 'maven-publish'
+	id 'net.minecraftforge.gradle' version '6.0.+'
 }
 
 version = project.mod_version
-loader_version = project.loader_version
-minecraft_version = project.minecraft_version
 group = project.maven_group
+archivesBaseName = project.archives_base_name
 
-base {
-	archivesName = project.archives_base_name
-}
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
-}
-
-loom {
-	splitEnvironmentSourceSets()
-
-	mods {
-		"respound" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
+minecraft {
+	mappings channel: 'official', version: project.minecraft_version
+	
+	runs {
+		client {
+			workingDirectory project.file('run')
+			property 'forge.logging.markers', 'REGISTRIES'
+			property 'forge.logging.console.level', 'debug'
+			mods {
+				respound {
+					source sourceSets.main
+				}
+			}
 		}
-	}
 
-}
-
-fabricApi {
-	configureDataGeneration {
-		client = true
+		server {
+			workingDirectory project.file('run')
+			property 'forge.logging.markers', 'REGISTRIES'
+			property 'forge.logging.console.level', 'debug'
+			mods {
+				respound {
+					source sourceSets.main
+				}
+			}
+		}
 	}
 }
 
 dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	
+	minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
 }
 
-processResources {
-	inputs.property "version", project.version
-	inputs.property "loader_version", project.loader_version
-	inputs.property "minecraft_version", project.minecraft_version
-
-	filesMatching("fabric.mod.json") {
-		expand (
-			"version": inputs.properties.version,
-			"loader_version": inputs.properties.loader_version,
-			"minecraft_version": inputs.properties.minecraft_version
-		)
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 17
-}
-
-java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
-
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
+// Сборка всех версий одной командой
+task buildAllVersions(dependsOn: build) {
+    description = "Builds the mod and creates copies for different Minecraft versions"
+    group = "build"
+    
+    // Этот блок будет выполнен после завершения сборки
+    doLast {
+        // Путь к исходному JAR-файлу
+        def sourceJar = file("build/libs/${archivesBaseName}-${project.mod_version}.jar")
+        
+        // Проверяем, что JAR существует
+        if (!sourceJar.exists()) {
+            throw new GradleException("JAR file not found at ${sourceJar}")
+        }
+        
+        // Список версий для которых создаем копии
+        def mcVersions = ['1.18.2', '1.19.4', '1.20.1']
+        
+        // Создаем копии для каждой версии
+        mcVersions.each { mcVer ->
+            def targetJar = file("build/libs/${archivesBaseName}-${project.mod_version}-mc${mcVer}.jar")
+            
+            // Копируем файл
+            copy {
+                from sourceJar
+                into 'build/libs'
+                rename { fileName -> fileName.replace('.jar', "-mc${mcVer}.jar") }
+            }
+            
+            println "Created JAR for Minecraft ${mcVer}: ${targetJar.name}"
+        }
+        
+        println "All versioned JARs created successfully!"
+    }
 }
 
 jar {
-	inputs.property "archivesName", project.base.archivesName
-
-	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
+	manifest {
+		attributes([
+			"Specification-Title": "respound",
+			"Specification-Vendor": "respoundsareus",
+			"Specification-Version": "1",
+			"Implementation-Title": project.name,
+			"Implementation-Version": "${project.mod_version}",
+			"Implementation-Vendor" :"respoundsareus",
+			"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+			"FMLModType": "MOD"
+		])
 	}
 }
 
-// configure the maven publication
+jar.finalizedBy('reobfJar')
+
 publishing {
 	publications {
-		create("mavenJava", MavenPublication) {
-			artifactId = project.archives_base_name
-			from components.java
+		mavenJava(MavenPublication) {
+			artifact jar
 		}
 	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
 	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
+		maven {
+			url "file://${project.projectDir}/mcmodsrepo"
+		}
 	}
 }

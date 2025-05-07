@@ -1,5 +1,7 @@
 {
     "respawn_sound": {
+        "category": "player",
+        "subtitle": "Return By Death",
         "sounds": [
             "respound:respawn_sound"
         ]
